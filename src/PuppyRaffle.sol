@@ -83,6 +83,7 @@ contract PuppyRaffle is ERC721, Ownable {
         }
 
         // Check for duplicates
+        // @audit check for duplicates
         for (uint256 i = 0; i < players.length - 1; i++) {
             for (uint256 j = i + 1; j < players.length; j++) {
                 require(players[i] != players[j], "PuppyRaffle: Duplicate player");
@@ -132,7 +133,7 @@ contract PuppyRaffle is ERC721, Ownable {
         uint256 prizePool = (totalAmountCollected * 80) / 100;
         uint256 fee = (totalAmountCollected * 20) / 100;
         totalFees = totalFees + uint64(fee);
-
+ 
         uint256 tokenId = totalSupply();
 
         // We use a different RNG calculate from the winnerIndex to determine rarity
