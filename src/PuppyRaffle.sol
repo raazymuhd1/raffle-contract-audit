@@ -82,6 +82,10 @@ contract PuppyRaffle is ERC721, Ownable {
             players.push(newPlayers[i]);
         }
 
+        bytes memory sign = abi.encodeWithSignature("getUser(address,string)", address(2), "mohammed raazy");
+        bytes encodedData = abi.encode("ENCODED");
+        string memory data = abi.decode(encodedData, (string));
+
         // Check for duplicates
         // @audit check for duplicates
         for (uint256 i = 0; i < players.length - 1; i++) {

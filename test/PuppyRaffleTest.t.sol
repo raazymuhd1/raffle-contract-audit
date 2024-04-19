@@ -222,7 +222,7 @@ contract PuppyRaffleTest is Test {
             numOfPlayers[i] = address(i);
         }
 
-        uint256 gasStart= gasleft();
+        uint256 gasStart= gasleft(); 
         puppyRaffle.enterRaffle{value: entranceFee * numOfPlayers.length}(numOfPlayers);
         uint256 gasEnd = gasleft();
         uint256 gasUsed = gasStart - gasEnd;

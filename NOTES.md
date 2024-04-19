@@ -25,3 +25,4 @@
 
  # Informational
  `PuppyRaffle::entranceFee` is immutable and should be marked like `i_entranceFee` or `I_ENTRANCE_FEE` to make it developers or auditor easier to notice whether its a `constant` or `immutable` state variables.
+
