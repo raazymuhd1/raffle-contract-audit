@@ -230,6 +230,5 @@ contract PuppyRaffleTest is Test {
         console.log(gasUsed);
         console.log("gas start", gasStart);
         console.log("gas end", gasEnd);
-
     }
 }

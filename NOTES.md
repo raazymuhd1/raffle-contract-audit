@@ -1,4 +1,11 @@
 
+## Private & Competitive Audit
+   **Private Audit**
+   - in private audit we dont really necessary to put the POC code unless client ask for it
+  
+   **Competitive Audit**
+   - but in competitive audit u need to put the POC code 
+
 ## Types Of Attacks
  - Denial Of Services (`DOS`) - where a function is become useless bcoz of gas cost keeps increasing causing by the code implementation and an attacker can easily attack the function to make it completely useless. ( the points is any issue (ex: gas issue, etc) that cause the transaction or function not be able to execute that is call a DOS )
   
