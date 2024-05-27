@@ -82,10 +82,7 @@ contract PuppyRaffle is ERC721, Ownable {
             players.push(newPlayers[i]);
         }
 
-        bytes memory sign = abi.encodeWithSignature("getUser(address,string)", address(2), "mohammed raazy");
-        bytes encodedData = abi.encode("ENCODED");
-        string memory data = abi.decode(encodedData, (string));
-
+  
         // Check for duplicates
         // @audit check for duplicates
         for (uint256 i = 0; i < players.length - 1; i++) {
@@ -99,12 +96,14 @@ contract PuppyRaffle is ERC721, Ownable {
     /// @param playerIndex the index of the player to refund. You can find it externally by calling `getActivePlayerIndex`
     /// @dev This function will allow there to be blank spots in the array
     function refund(uint256 playerIndex) public {
+        // @audit MEV
         address playerAddress = players[playerIndex];
         require(playerAddress == msg.sender, "PuppyRaffle: Only the player can refund");
         require(playerAddress != address(0), "PuppyRaffle: Player already refunded, or is not active");
 
+        // @audit reentrancy
         payable(msg.sender).sendValue(entranceFee);
-
+ 
         players[playerIndex] = address(0);
         emit RaffleRefunded(playerAddress);
     }
@@ -112,15 +111,20 @@ contract PuppyRaffle is ERC721, Ownable {
     /// @notice a way to get the index in the array
     /// @param player the address of a player in the raffle
     /// @return the index of the player in the array, if they are not active, it returns 0
+    // IMPACT: MEDIUM/LOW
+    // LIKELIHOOD: LOW/HIGH
+    // SEVERITY: MED/LOW
     function getActivePlayerIndex(address player) external view returns (uint256) {
         for (uint256 i = 0; i < players.length; i++) {
             if (players[i] == player) {
                 return i;
             }
         }
+        // q: what if the player is at index 0?
+        // @audit if the player is at index 0, it'll return 0 and a player might think they are not active
         return 0;
     }
-
+ 
     /// @notice this function will select a winner and mint a puppy
     /// @notice there must be at least 4 players, and the duration has occurred
     /// @notice the previous winner is stored in the previousWinner variable
@@ -130,17 +134,22 @@ contract PuppyRaffle is ERC721, Ownable {
     function selectWinner() external {
         require(block.timestamp >= raffleStartTime + raffleDuration, "PuppyRaffle: Raffle not over");
         require(players.length >= 4, "PuppyRaffle: Need at least 4 players");
+        // @audit randomness exploit
+        // fixes: Chainlink VFR
         uint256 winnerIndex =
             uint256(keccak256(abi.encodePacked(msg.sender, block.timestamp, block.difficulty))) % players.length;
         address winner = players[winnerIndex];
         uint256 totalAmountCollected = players.length * entranceFee;
         uint256 prizePool = (totalAmountCollected * 80) / 100;
         uint256 fee = (totalAmountCollected * 20) / 100;
+        // @audit overflow 
+        // Fixes: use Newer version of solidity or use bigger uints type
+        // @audit unsafe cast of uint256 to uint64 (casting from uint256 to uint64 will make some values tobe padd it)
         totalFees = totalFees + uint64(fee);
- 
         uint256 tokenId = totalSupply();
 
         // We use a different RNG calculate from the winnerIndex to determine rarity
+        // @audit randomness
         uint256 rarity = uint256(keccak256(abi.encodePacked(msg.sender, block.difficulty))) % 100;
         if (rarity <= COMMON_RARITY) {
             tokenIdToRarity[tokenId] = COMMON_RARITY;
@@ -160,12 +169,17 @@ contract PuppyRaffle is ERC721, Ownable {
 
     /// @notice this function will withdraw the fees to the feeAddress
     function withdrawFees() external {
+        // q: so, if the protocol has players someone can't withdraw fees ?
+        // @audit is it difficult to withdraw fees ?
+        // @audit mishandling ETH
         require(address(this).balance == uint256(totalFees), "PuppyRaffle: There are currently players active!");
         uint256 feesToWithdraw = totalFees;
         totalFees = 0;
+        // slither-disable-next-line arbitrary-send-eth
         (bool success,) = feeAddress.call{value: feesToWithdraw}("");
         require(success, "PuppyRaffle: Failed to withdraw fees");
     }
+    
 
     /// @notice only the owner of the contract can change the feeAddress
     /// @param newFeeAddress the new address to send fees to
